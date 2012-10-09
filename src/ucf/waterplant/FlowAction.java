@@ -7,14 +7,18 @@
 package ucf.waterplant;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * Class reads in the file creates the Station objects and starts the threads.
+ * @author David
+ */
 public class FlowAction{
 	
 	private final static String CONFIG_FILE = "config.txt";
@@ -23,10 +27,15 @@ public class FlowAction{
 	private static int mStations;
 
 	
-	class Loop implements Runnable{
+	/**
+	 * WorkLoad is the thread that will run until the WorkLoad for each station is done.
+	 * @author David
+	 *
+	 */
+	class WorkLoad implements Runnable{
 		Station mThisStation;
 		Station mPrevStation;
-		public Loop(Station mStation){
+		public WorkLoad(Station mStation){
 			this.mThisStation = mStation;
 			int pos = mStationList.indexOf(mStation);
 			if(pos != 0) mPrevStation = mStationList.get(pos - 1);
@@ -37,6 +46,11 @@ public class FlowAction{
 			System.out.println("Station "+this.mThisStation.mStationNumber+": In connection set to pipe "+this.mThisStation.mPipe1);
 			System.out.println("Station "+this.mThisStation.mStationNumber+": Out connection set to pipe "+this.mThisStation.mPipe2);
 			System.out.println("Station "+this.mThisStation.mStationNumber+": Workload set to "+this.mThisStation.mWorkLoad);
+
+			writeFile("Station "+this.mThisStation.mStationNumber+": In connection set to pipe "+this.mThisStation.mPipe1);
+			writeFile("Station "+this.mThisStation.mStationNumber+": Out connection set to pipe "+this.mThisStation.mPipe2);
+			writeFile("Station "+this.mThisStation.mStationNumber+": Workload set to "+this.mThisStation.mWorkLoad);
+			
 			while(mThisStation.mWorkLoad != 0){
 				Random random = new Random();
 				try {
@@ -44,10 +58,18 @@ public class FlowAction{
                 } catch (InterruptedException e) {}
 				mThisStation.doWork(mPrevStation);
 			}
+			if(mThisStation.mWorkLoad == 0){
+				System.out.println("Station "+this.mThisStation.mStationNumber+": Workload successfully completed.");
+				writeFile("Station "+this.mThisStation.mStationNumber+": Workload successfully completed.");
+			}
 			
 		}
 		
 	}
+	/**
+	 * Reads in the config file to the Station object.
+	 * @param CONFIG_FILE
+	 */
 	private static void readFile(String CONFIG_FILE){
 		FileReader mFile = null;
 		BufferedReader mReader = null;
@@ -60,7 +82,7 @@ public class FlowAction{
 			int i = 0;
 			int prevPipe;
 			while((mLine = mReader.readLine()) != null){
-				if(i == 0) prevPipe = mStations;
+				if(i == 0) prevPipe = mStations - 1;
 				else prevPipe = i - 1;
 				Station mStation = new Station(i,prevPipe,Integer.valueOf(mLine));
 				mStationList.add(mStation);
@@ -83,12 +105,31 @@ public class FlowAction{
 		}
 	}
 	
+	private static void writeFile(String mString){
+		String FILE = "output.txt";
+		try {
+			FileWriter mFileWriter = new FileWriter(FILE,true);
+			BufferedWriter mBufferedWriter = new BufferedWriter(mFileWriter);
+			mBufferedWriter.write(mString);
+			mBufferedWriter.newLine();
+			mBufferedWriter.close();
+			mFileWriter.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Starts the all of the threads
+	 * @param args
+	 */
 	public static void main(String[] args){
+
 		mStationList = new ArrayList<Station>();
 		readFile(CONFIG_FILE);
 		
 		for(Station mS: mStationList){
-			new Thread(new FlowAction().new Loop(mS)).start();
+			new Thread(new FlowAction().new WorkLoad(mS)).start();
 			
 		}
 	}
