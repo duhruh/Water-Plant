@@ -10,7 +10,7 @@ Description
 In this programming assignment you will simulate the pump management system for 
 a water treatment plant like the one depicted here:
 
-![Station](/davidrivera/Water-Plant/blob/master/station.png)
+![Station](https://github.com/davidrivera/Water-Plant/blob/master/station.png)
 
 This example water treatment plant has five pumping stations (S0 – S4), each of which has an input 
 and output pipe connecting to lines (P0 – P4) that go elsewhere in the plant.  Resources were limited 
